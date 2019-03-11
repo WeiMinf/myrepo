@@ -1,0 +1,49 @@
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    registerWithEureka: false #注册中心不需要注册自己
+    fetchRegistry: false #注册中心不需要去发现服务
+    #设置服务注册中心的URL
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+
+spring:
+  application:
+  name: eureka-server
+#  datasource:
+#    username: root
+#    password: root
+#    url: jdbc:mysql://127.0.0.1:3306/springboot?serverTimezone=UTC
+    #serverTimezone=GMT%2B8 时区：东八区
+
+  devtools:
+    restart:
+      enabled: true #热部署生效
+      additional-paths: src/main/java #设置重启的目录
+      exclude: WEB-INF/** #classpath目录下的WEB-INF文件夹内容修改不重启
+  freemarker:
+    cache: false #页面不加载缓存，修改即时生效
+
+#mybatis:
+#  type-aliases-package: com.example.mybatisdemo.entity
+#  mapper-locations: classpath:mapping/*Mapper.xml
+#
+##showSql
+#logging:
+#  level:
+#    com:
+#      example:
+#        mybatisdemo:
+#          mapper: debug
+
+
+
+management:
+  endpoint:
+    health:
+      show-details: always
