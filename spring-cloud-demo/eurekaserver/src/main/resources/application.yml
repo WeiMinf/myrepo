@@ -1,8 +1,24 @@
+#spring:
+#  profiles:
+#    active: dev
+
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    registerWithEureka: false #注册中心不需要注册自己
+    fetchRegistry: false #注册中心不需要去发现服务
+    #设置服务注册中心的URL
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+
 spring:
-  profiles:
-    active: dev
-
-
+  application:
+  name: eureka-server
 
 
 
