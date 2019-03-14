@@ -1,0 +1,33 @@
+1、dependencyManagement
+在maven中dependencyManagement的作用相当于一个对项目所依赖的jar包进行版本管理的管理器。
+
+在pom.xml文件中，jar的版本判断的两种途径
+1）如果dependencies里的dependency自己没有声明version元素，
+那么maven就到dependencyManagement元素里面去找有没有对改artifactId和groupId进行过版本声明，
+如果有就集成它，没有就会报错，告诉你必须为dependency声明一个version。
+2）如果dependency声明了version，则无论dependencyManagement有无对改jar的version进行声明，都以dependency里的version为准。
+
+例如：
+<!-- 只是对版本进行管理，不会实际引入jar -->
+<dependencyManagement>
+      <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>3.2.7</version>
+            </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<!-- 会实际下载jar包 -->
+<dependencies>
+       <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+       </dependency>
+</dependencies>
+
+dependencyManagement和dependencies区别：
+dependencies即使在子项目中不写该依赖项，那么子项目仍然会从父项目继承该依赖项（全部继承）
+dependencyManagement里只是声明依赖，并不实际引入，因此项目需要显式声明需要的依赖。如果该依赖已在父项目中声明，未在子项目声明，则此依赖是不会从父项目继承下来；
+只有在子项目中声明了该依赖，且没有没有指定具体版本，才会从父项目中继承该项，并且version和scope都读取自父项目pom.xml；另外如果子项目指定了版本号，则使用子项目指定的版本。
