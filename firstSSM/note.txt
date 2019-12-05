@@ -1,0 +1,491 @@
+1. 搭建整合环境
+    1. 整合说明
+    整合说明：SSM整合可以使用多种方式，咱们选择XML + 注解的方式，不要觉得不妥，这样其实最便捷-
+
+    2. 整合的思路：
+        1、先搭建整合的环境
+
+
+        2、先把Spring的配置搭建完成
+         
+
+        3、再使用Spring整合SpringMVC框架
+         
+
+        4、之后使用Spring整合MyBatis框架
+         
+
+        5、最后spring整合mybatis框架配置事务（Spring的声明式事务管理）
+
+    3. 创建数据库和表结构语句：
+        复制在MySQL中运行即可：
+
+        create database ssm;
+        use ssm;
+        create table account (
+        id int primary key auto_increment,
+        name varchar(50),
+        money double
+        );
+
+    4. 创建maven的工程
+        具体的使用idea创建maven，请看这篇使用IntelliJ IDEA创建第一个Mawen项目
+
+        创建Twossm_parent父工程（打包方式选择pom，必须的）
+        创建Twossm_web子模块（打包方式是war包）
+        创建Twossm_service子模块（打包方式是jar包）
+        创建Twossm_dao子模块（打包方式是jar包）
+        创建Twossm_domain子模块（打包方式是jar包）
+        web依赖于service，service依赖于dao，dao依赖于domain
+        在Twossm_parent的pom.xml文件中引入坐标依赖
+        找到对应的< properties >标签，以及< dependencies >标签，复制粘贴即可
+        版本控制是在< properties >标签中控制，从坐标依赖中可以看出版本号：spring5X、MySQL3.1.6、mybatis3.4.5
+        <properties>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            <maven.compiler.source>1.7</maven.compiler.source>
+            <maven.compiler.target>1.7</maven.compiler.target>
+            <spring.version>5.0.2.RELEASE</spring.version>
+            <slf4j.version>1.6.6</slf4j.version>
+            <log4j.version>1.2.12</log4j.version>
+            <mysql.version>5.1.6</mysql.version>
+            <mybatis.version>3.4.5</mybatis.version>
+          </properties>
+
+
+        <dependencies>
+            <dependency>
+              <groupId>org.aspectj</groupId>
+              <artifactId>aspectjweaver</artifactId>
+              <version>1.6.8</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-aop</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-context</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-web</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-webmvc</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-test</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-tx</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-jdbc</artifactId>
+              <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>4.12</version>
+              <scope>compile</scope>
+            </dependency>
+            <dependency>
+              <groupId>mysql</groupId>
+              <artifactId>mysql-connector-java</artifactId>
+              <version>${mysql.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>javax.servlet</groupId>
+              <artifactId>servlet-api</artifactId>
+              <version>2.5</version>
+              <scope>provided</scope>
+            </dependency>
+            <dependency>
+              <groupId>javax.servlet.jsp</groupId>
+              <artifactId>jsp-api</artifactId>
+              <version>2.0</version>
+              <scope>provided</scope>
+            </dependency>
+            <dependency>
+              <groupId>jstl</groupId>
+              <artifactId>jstl</artifactId>
+              <version>1.2</version>
+            </dependency> <!-- log start -->
+            <dependency>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+              <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-api</artifactId>
+              <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-log4j12</artifactId>
+              <version>${slf4j.version}</version>
+            </dependency> <!-- log end -->
+            <dependency>
+              <groupId>org.mybatis</groupId>
+              <artifactId>mybatis</artifactId>
+              <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.mybatis</groupId>
+              <artifactId>mybatis-spring</artifactId>
+              <version>1.3.0</version>
+            </dependency>
+            <dependency>
+              <groupId>c3p0</groupId>
+              <artifactId>c3p0</artifactId>
+              <version>0.9.1.2</version>
+              <type>jar</type>
+              <scope>compile</scope>
+            </dependency>
+          </dependencies>
+
+
+        8、部署Twossm_web的项目，只要把Twossm_web项目加入到tomcat服务器中即可
+
+2、Spring框架代码的编写
+搭建和测试Spring的开发环境
+
+    1、创建resources的资源文件目录管理XML配置文件
+    创建一个叫resources的资源文件目录，用来管理放置XML配置文件
+
+    2、编写applicationContext.xml的配置文件
+    在resources资源文件中创建applicationContext.xml的配置文件，编写具体的配置信息
+
+    3. 在项目中编写测试方法，进行测试
+    在test包中创建一个叫TestSpring的class类
+
+3、SpringMVC框架代码的编写
+搭建和测试SpringMVC的开发环境
+
+    1. 在web.xml中配置DispatcherServlet前端控制器
+      <!--配置前端控制器-->
+      <servlet>
+         <servlet-name>dispatcherServlet</servlet-name>
+          <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+          <!--加载springmvc.xml配置文件-->
+          <init-param>
+              <param-name>contextConfigLocation</param-name>
+              <param-value>classpath:springmvc.xml</param-value>
+          </init-param>
+          <!--启动服务器，创建该servlet-->
+          <load-on-startup>1</load-on-startup>
+      </servlet>
+        <servlet-mapping>
+            <servlet-name>dispatcherServlet</servlet-name>
+            <url-pattern>/</url-pattern>
+        </servlet-mapping>
+
+    2. 在web.xml中配置DispatcherServlet过滤器解决中文乱码
+    <!--解决中文乱码的过滤器-->
+        <filter>
+            <filter-name>characterEncodingFilter</filter-name>
+            <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+            <init-param>
+                <param-name>encoding</param-name>
+                <param-value>UTF-8</param-value>
+            </init-param>
+        </filter>
+        <filter-mapping>
+            <filter-name>characterEncodingFilter</filter-name>
+            <url-pattern>/*</url-pattern>
+        </filter-mapping>
+
+    3. web.xml中配置的整体效果
+
+    4. 创建springmvc.xml的配置文件，编写配置文件
+        同样是在resources资源文件夹中创建springmvc.xml配置文件
+        springmvc.xml的配置文件内容：
+
+        <?xml version="1.0" encoding="UTF-8"?>
+        <beans xmlns="http://www.springframework.org/schema/beans"
+               xmlns:mvc="http://www.springframework.org/schema/mvc"
+               xmlns:context="http://www.springframework.org/schema/context"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans.xsd
+                http://www.springframework.org/schema/mvc
+                http://www.springframework.org/schema/mvc/spring-mvc.xsd
+                http://www.springframework.org/schema/context
+                http://www.springframework.org/schema/context/spring-context.xsd">
+            <!--开启注解扫描，只扫描Controller注解-->
+            <context:component-scan base-package="com.gx">
+                <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+            </context:component-scan>
+
+            <!--配置的视图解析器对象-->
+            <bean id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                <property name="prefix" value="/WEB-INF/pages/"/>
+                <property name="suffix" value=".jsp"/>
+            </bean>
+            <!--过滤静态资源-->
+            <mvc:resources location="/css" mapping="/css/**"/>
+            <mvc:resources location="/images/" mapping="/images/**"/>
+            <mvc:resources location="/js/" mapping="/js/**"/>
+            <!--开启SpringMVC注解的支持-->
+            <mvc:annotation-driven/>
+        </beans>
+
+    5.创建jsp页面，并编写controller代码
+        编写index.jsp页面
+
+        <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+        <html>
+        <body>
+        <a href="account/findAll">测试SpringMVC查询</a>
+        </body>
+        </html>
+
+        在controller层中的AccountController的class类中编写代码
+
+        package com.gx.controller;
+
+        import com.gx.domain.Account;
+        import com.gx.service.AccountService;
+        import org.springframework.beans.factory.annotation.Autowired;
+        import org.springframework.stereotype.Controller;
+        import org.springframework.ui.Model;
+        import org.springframework.web.bind.annotation.RequestMapping;
+
+        import java.util.List;
+
+        @Controller
+        public class AccountController {
+
+            @RequestMapping("/account/findAll")
+            public String findAll(){
+                System.out.println("Controller表现层：查询所有账户...");
+                return "list";  //在视图解析器中配置了前缀后缀
+            }
+        }
+4. Spring整合SpringMVC的框架
+整合之前，想一想，怎样去整合Spring、SpringMVC框架呢，怎么才算是整合成功了呢，带着问题，一起来吧！
+
+    1、Spring整合SpringMVC的框架原理分析
+        整合成功的表现：在controller（SpringMVC）中能成功的调用service（Spring）对象中的方法。
+        要想在controller中调用service方法，就要注入service到controller中来，有service对象才
+        可以调用service方法，方法是这样没有错，但是有一个问题，就是启动Tomcat之后试想一下，在web.xml中
+        配置有前端控制器，web容器会帮我们加载springmvc.xml配置文件，在springmvc.xml配置文件中我们配置
+        情况是只扫描controller，别的不扫，而spring.xml文件就从头到尾没有执行过，spring中的配置扫描自然
+        也不会去扫描，就相当于没有将spring交到IOC容器当中去，所以，现在的解决方案就是，在启动服务器时就加
+        载spring配置文件,怎么实现呢？这时候监听器listener就派上用场了，具体实现如下：
+
+        服务器启动创建servletContext对象（该对象在服务器关闭时才销毁），通过org.springframework.web.servlet.DispatcherServlet类创建。
+        javax.servlet.ServletContextListener接口能监听servletContext对象的生命周期。
+        org.springframework.web.context.ContextLoaderListener类实现了javax.servlet.ServletContextListener接口，
+        ServletContextListener接口能监听servletContext对象的生命周期，
+        因为一个web应用仅有一个servletContext对象，故该接口监听的是整个web应用。
+        在web.xml中配置监听器后，当web应用启动创建servletContext对象后，就会触发servletContextEvent事件，
+        调用contextLoaderListener的contextInitialized(ServletContextEvent event)方法，
+        在contextInitialized方法中调用ContextLoader.initWebApplicationContext(event.getServletContext())来初始化spring容器
+        	/**
+        	 * Initialize the root web application context.
+        	 */
+        	@Override
+        	public void contextInitialized(ServletContextEvent event) {
+        		initWebApplicationContext(event.getServletContext());
+        	}
+    2、在web.xml中配置ContextLoaderListener监听器
+        在项目启动的时候，就去加载applicationContext.xml的配置文件，在web.xml中配置ContextLoaderListener监听器
+        <!--配置Spring的监听器，默认只加载WEB-INF目录下的applicationContext.xml配置文件-->
+            <listener>
+                <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+            </listener>
+         <!--设置配置文件的路径-->
+            <context-param>
+                <param-name>contextConfigLocation</param-name>
+                <param-value>classpath:applicationContext.xml</param-value>
+            </context-param>
+
+     3. controller中注入service对象，调用service对象方法并测试
+
+5、MyBatis框架代码的编写
+一看到Mybatis，就要想到dao，没错，MyBatis环境搭建首先是dao，搭建mybatis，之前要编写mapper映射的配置文件，其实挺麻烦的，所以我选择使用注解！
+    1、在IAccountdao接口方法上添加注解，编写SQL语句
+        @Repository  //此注解代表这是一个持久层，用法类似@controller、@service
+        public interface IAccountdao {
+
+            @Select("select * from account")
+            public List<Account> findAll();
+            @Insert("insert into account (name,money) value(#{name},#{money})")
+            public void saveAccount(Account account);
+        }
+    2.创建SqlMapConfig.xml的配置文件并编写
+        <?xml version="1.0" encoding="UTF-8"?> <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+                "http://mybatis.org/dtd/mybatis-3-config.dtd">
+        <configuration>
+            <environments default="mysql">
+                <environment id="mysql">
+                    <transactionManager type="JDBC"/>
+                    <dataSource type="POOLED">
+                        <property name="driver" value="com.mysql.jdbc.Driver"/>
+                        <property name="url" value="jdbc:mysql:///ssm"/>
+                        <property name="username" value="root"/>
+                        <property name="password" value="root"/>
+                    </dataSource>
+                </environment>
+            </environments>
+            <!-- 使用的是注解 -->
+            <mappers>
+                <!-- <mapper class="com.gx.dao.IAccountdao"/> --> <!-- 该包下所有的dao接口都可以使用 -->
+                <package name="com.wmf.dao"/>
+
+            </mappers>
+        </configuration>
+    3. 创建并编写Mybatis测试方法
+        public class TestMyBatis {
+
+            @Test
+            public void run1() throws IOException {
+                Account account = new Account();
+                account.setName("杜永蓝");
+                account.setMoney(200d);
+                // 加载配置文件
+                InputStream in = Resources.getResourceAsStream("SqlMapConfig.xml");
+                // 创建SqlSessionFactory对象
+                SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(in);
+                // 创建SqlSession对象
+                SqlSession session = factory.openSession();
+                // 获取到代理对象
+                IAccountdao dao = session.getMapper(IAccountdao.class);
+
+                // 保存
+                dao.saveAccount(account);
+
+                // 提交事务
+                session.commit();
+
+                // 关闭资源
+                session.close();
+                in.close();
+            }
+
+            @Test
+            public void run2() throws Exception {
+                InputStream in = Resources.getResourceAsStream("SqlMapConfig.xml");
+
+                SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(in);
+
+                SqlSession session = factory.openSession();
+
+                IAccountdao dao = session.getMapper(IAccountdao.class);
+
+                List<Account> list = dao.findAll();
+                for (Account account: list ) {
+                    System.out.println(account);
+                }
+
+                session.close();
+                in.close();
+            }
+        }
+
+6. Spring整合MyBatis框架
+    Spring整合MyBatis框架之前，先想一想，怎样才算整合成功呢？其实，这和之前的spring整合springMVC的套路差不多，
+    其实就是，Service能成功调用dao对象，能够做查询操作或者新增数据能存进数据库。现在spring已经是在IOC容器中了，
+    dao是一个接口，可以通过程序帮这个接口生成代理对象，我们要是可以把这个代理对象也放进IOC容器，那么service就可以
+    拿到这个对象，之后在service中做一个注入，service从而调用dao代理对象的方法，那么我们怎么去实现dao接口生成的代
+    理对象放入IOC容器呢？其实很简单，只需要如下操作！
+    整合目的：把SqlMapConfig.xml配置文件中的内容配置到applicationContext.xml配置文件中
+
+    1、在applicationContext.xml中配置数据库连接池
+         <!--Spring整合MyBatis框架-->
+            <!--配置连接池-->
+            <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+                <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+                <property name="jdbcUrl" value="jdbc:mysql://127.0.0.1:3306/springboot"/>
+                <property name="user" value="root"/>
+                <property name="password" value="root"/>
+            </bean>
+
+    2、在applicationContext.xml中配置SqlSessionFactory工厂
+        没配置工厂之前，我们用Test测试的时候，每次都要先创建工厂，因为工厂能够给我们创建SqlSession,有了SqlSession
+        就可以通过SqlSession拿到代理对象。现在我们直接在applicationContext.xml中配置SqlSessionFactory工厂，
+        这就相当于IOC容器中有了工厂，就可以去创建SqlSession，进而通过SqlSession拿到代理对象，没必要每次测试都去创建工厂。
+        <!--配置SqlSessionFactory工厂-->
+        <bean id="sqlSessonFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+            <property name="dataSource" ref="dataSource"/>
+         </bean>
+    3、在applicationContext.xml中配置IAccountdao接口所在包
+        因为工厂有了，SqlSession也有了，那代理谁呢，所以我们要配置IAccountdao接口所在包，告诉SqlSession去代理接口所在包中的代理，从而存到IOC容器中
+        <!--配置IAccountdao接口所在包-->
+        <bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+            <property name="basePackage" value="com.wmf.dao"/>
+        </bean>
+    4、小结上面的三个配置
+        其实，上面的操作就是把mybatis中的配置（SqlMapConfig.xml）转移到spring中去，让它产生代理并存到IOC容器中！
+
+    5、完善Service层代码
+
+    6、完善Controller层代码
+        @RequestMapping("/account/findAll")
+        public String findAll(Model model){  //存数据， Model对象
+            System.out.println("Controller表现层：查询所有账户...");
+            // 调用service的方法
+            List<Account> list = accountService.findAll();
+            model.addAttribute("list",list);
+            return "list";
+        }
+    7、完善list.jsp页面
+
+7.spring整合mybatis框架配置事务（Spring的声明式事务管理）
+细心的小伙伴可能发现了，我在整合spring、mybatis测试的时候（TestMybatis中），新增数据保存的时候手动的提交过事务 session.commit()，如果不写这一句，就会出现数据没提交的情况，因此为了完美的整合ssm，我们必须配置Spring的声明式事务管理！
+
+1、在applicationContext.xml中配置Spring框架声明式事务管理
+    <!--配置Spring框架声明式事务管理-->
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <!--配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="*" isolation="DEFAULT"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置AOP增强-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* com.gx.service.Impl.*ServiceImpl.*(..))"/>
+    </aop:config>
+
+mybatis配置，可在创建SqlSessionFactory工厂时指定配置文件路径或指定配置类。
+    第一种：
+    <bean id="mybatisConfig" class="com.wmf.config.MybatisConfig"></bean>
+
+    <!--配置SqlSessionFactory工厂-->
+    <bean id="sqlSessonFactory" class="org.mybatis.spring.SqlSessionFactoryBean" >
+        <property name="dataSource" ref="dataSource"/>
+        <!-- mybatis配置，configuration和configLocation不能同时存在-->
+        <property name="configuration" ref="mybatisConfig"/>
+    </bean>
+
+    <bean id="mybatisConfig" class="com.wmf.config.MybatisConfig"></bean>
+
+    第二种：
+    <!--配置SqlSessionFactory工厂-->
+    <bean id="sqlSessonFactory" class="org.mybatis.spring.SqlSessionFactoryBean" >
+        <property name="dataSource" ref="dataSource"/>
+        <!-- mybatis配置，configuration和configLocation不能同时存在-->
+        <property name="configLocation" value="classpath:myBatis-config.xml"></property>
+    </bean>
+
+
