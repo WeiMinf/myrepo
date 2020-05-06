@@ -19,7 +19,7 @@
         <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
     </context:component-scan>
 
-    <bean id="mybatisConfig" class="com.wmf.config.MybatisConfig"></bean>
+    <bean id="mybatisConfig" class="com.wmf.config.MybatisConfig" init-method="afterInit"></bean>
     <!--Spring整合MyBatis框架-->
     <!--配置连接池-->
     <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
